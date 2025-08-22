@@ -1,8 +1,22 @@
-import { Action, ActionPanel, Clipboard, Icon, List, showHUD } from "@raycast/api";
+import {
+  Action,
+  ActionPanel,
+  Clipboard,
+  Icon,
+  List,
+  showHUD,
+} from "@raycast/api";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Slip44Entry, getSlip44Entries, toDecimal, fromDecimal } from "./slip44";
+import {
+  Slip44Entry,
+  getSlip44Entries,
+  toDecimal,
+  fromDecimal,
+} from "./slip44";
 
-export default function DecimalConverter(props: { arguments?: { amount?: string } }) {
+export default function DecimalConverter(props: {
+  arguments?: { amount?: string };
+}) {
   const [query, setQuery] = useState(props.arguments?.amount ?? "");
   const [entries, setEntries] = useState<Slip44Entry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -10,55 +24,68 @@ export default function DecimalConverter(props: { arguments?: { amount?: string 
   useEffect(() => {
     getSlip44Entries()
       .then((data) => {
-        setEntries(data.filter(e => e.decimals)); // Only networks with decimals
+        setEntries(data.filter((e) => e.decimals)); // Only networks with decimals
       })
       .finally(() => setIsLoading(false));
   }, []);
 
-  const handleConvert = useCallback(async (amount: string, network: Slip44Entry, direction: 'to' | 'from') => {
-    try {
-      let result: string;
-      if (direction === 'to') {
-        result = toDecimal(amount, network.decimals!);
-        await Clipboard.copy(result);
-        await showHUD(`${amount} ${network.symbol || network.name} = ${result}`);
-      } else {
-        result = fromDecimal(amount, network.decimals!);
-        await Clipboard.copy(result);
-        await showHUD(`${amount} = ${result} ${network.symbol || network.name}`);
+  const handleConvert = useCallback(
+    async (amount: string, network: Slip44Entry, direction: "to" | "from") => {
+      try {
+        let result: string;
+        if (direction === "to") {
+          result = toDecimal(amount, network.decimals!);
+          await Clipboard.copy(result);
+          await showHUD(
+            `${amount} ${network.symbol || network.name} = ${result}`
+          );
+        } else {
+          result = fromDecimal(amount, network.decimals!);
+          await Clipboard.copy(result);
+          await showHUD(
+            `${amount} = ${result} ${network.symbol || network.name}`
+          );
+        }
+      } catch (error) {
+        await showHUD("Invalid amount");
       }
-    } catch (error) {
-      await showHUD("Invalid amount");
-    }
-  }, []);
+    },
+    []
+  );
 
   // Filter networks based on search query
   const filteredNetworks = useMemo(() => {
     if (!query) return entries;
-    
+
     // If query looks like a number, don't filter networks
     if (/^[\d.]+$/.test(query)) {
       return entries;
     }
-    
+
     // Otherwise filter networks by name/symbol
-    return entries.filter(network => 
-      network.name.toLowerCase().includes(query.toLowerCase()) ||
-      (network.symbol && network.symbol.toLowerCase().includes(query.toLowerCase()))
+    return entries.filter(
+      (network) =>
+        network.name.toLowerCase().includes(query.toLowerCase()) ||
+        (network.symbol &&
+          network.symbol.toLowerCase().includes(query.toLowerCase()))
     );
   }, [entries, query]);
 
   const renderNetworkItem = (network: Slip44Entry) => {
     const isNumberQuery = query && /^[\d.]+$/.test(query);
-    
+
     return (
       <List.Item
         key={`${network.coinType}-${network.name}`}
         title={network.name}
-        subtitle={network.symbol ? `${network.symbol} (${network.decimals} decimals)` : `${network.decimals} decimals`}
+        subtitle={
+          network.symbol
+            ? `${network.symbol} (${network.decimals} decimals)`
+            : `${network.decimals} decimals`
+        }
         accessories={[
           { text: `Type: ${network.coinType}` },
-          { text: `${network.decimals}d`, icon: Icon.Hashtag }
+          { text: `${network.decimals}d`, icon: Icon.Hashtag },
         ]}
         actions={
           <ActionPanel>
@@ -67,13 +94,13 @@ export default function DecimalConverter(props: { arguments?: { amount?: string 
                 <Action
                   title={`Convert ${query} to Decimal`}
                   icon={Icon.Calculator}
-                  onAction={() => handleConvert(query, network, 'to')}
+                  onAction={() => handleConvert(query, network, "to")}
                   shortcut={{ modifiers: ["cmd"], key: "enter" }}
                 />
                 <Action
                   title={`Convert ${query} from Decimal`}
                   icon={Icon.Calculator}
-                  onAction={() => handleConvert(query, network, 'from')}
+                  onAction={() => handleConvert(query, network, "from")}
                   shortcut={{ modifiers: ["cmd", "shift"], key: "enter" }}
                 />
               </>
@@ -126,7 +153,7 @@ export default function DecimalConverter(props: { arguments?: { amount?: string 
           />
         </List.Section>
       )}
-      
+
       <List.Section title="Select Network">
         {filteredNetworks.map(renderNetworkItem)}
       </List.Section>

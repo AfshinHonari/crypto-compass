@@ -5,7 +5,7 @@
   "description": "Navigate the crypto landscape with precision. Convert SLIP-0044 IDs, convert amounts, and get real-time prices.",
   "categories": ["Developer Tools", "Productivity", "Finance"],
   "icon": "assets/icon.png",
-  "author": "Your Name",
+  "author": "Afshin Honari",
   "license": "MIT",
   "version": "1.0.0",
   "commands": [
